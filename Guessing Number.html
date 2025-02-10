@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Number Game</title>
+    <link rel="icon" href="./assets/733.webp">
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url('./assets/733.webp'); /* Natural background image */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-top: 50px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        p {
+            font-size: 18px;
+            margin-top: 10px;
+            color: #ffffff;
+        }
+
+        /* Container Styling */
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            width: 80%;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Score Section */
+        .score {
+            font-size: 20px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+
+
+        /* Input and Button Styling */
+        input[type="number"] {
+            font-size: 18px;
+            padding: 10px;
+            width: 70%;
+            border-radius: 10px;
+            border: 1px solid #3498db;
+            outline: none;
+            margin-right: 10px;
+            transition: border-color 0.3s ease;
+            background-color: black;
+            opacity: 0.9;
+            color: white;
+        }
+        input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+        input[type="number"]:focus {
+            border-color: white;
+        }
+
+        button {
+            font-size: 18px;
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #f39c12;
+        }
+
+        /* Message and Attempts Styling */
+        .message {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        #attempts {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        /* Success/Failure Message Colors */
+        .correct {
+            color: #2ecc71;
+        }
+
+        .high {
+            color: #e74c3c;
+        }
+
+        .low {
+            color: #3498db;
+        }
+
+        .game-over {
+            color: #e67e22;
+        }
+
+        /* Restart Button */
+        .restart-btn {
+            font-size: 20px;
+            padding: 10px 20px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .restart-btn:hover {
+            background-color: #f39c12;
+        }
+
+        /* 3D Heart Animation */
+        .heart {
+            font-size: 50px;
+            color: #e74c3c;
+            display: inline-block;
+            animation: heart-pulse 1.5s infinite alternate;
+            transform-origin: center center;
+        }
+
+        @keyframes heart-pulse {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.2);
+            }
+        }
+
+        /* 3D Broken Heart Animation */
+        .broken-heart {
+            font-size: 50px;
+            color: #e74c3c;
+            display: inline-block;
+            animation: heart-break 1.5s forwards;
+        }
+
+        @keyframes heart-break {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(0.8) rotate(10deg);
+            }
+            100% {
+                transform: scale(0.5) rotate(-30deg);
+                opacity: 0;
+            }
+        }
+
+        /* Try Again Later Message */
+        .try-again {
+            font-size: 20px;
+            color: #f39c12;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Guess the Number!</h1>
+        <p>Guess a number between 1 and 100. You have 5 attempts to get it right!</p>
+
+        <div class="score" id="score">Score: 0</div>
+
+        <div class="input-container">
+            <input type="number" id="guess" min="1" max="100" placeholder="Your guess...">
+            <button onclick="checkGuess()" id="btn">Submit Guess</button>
+        </div>
+
+        <div class="message" id="message"></div>
+        <div id="attempts"></div>
+
+        <!-- Heart will appear when the player wins -->
+        <div id="heart" class="heart" style="display: none;">❤️</div>
+
+        <!-- Broken Heart will appear when the player loses -->
+        <div id="brokenHeart" class="broken-heart" style="display: none;">💔</div>
+
+        <!-- Try Again Later message -->
+        <div id="tryAgain" class="try-again" style="display: none;">Try Again Later</div>
+
+        <button class="restart-btn" id="restartButton" onclick="restartGame()">Restart Game</button>
+    </div>
+
+    <script>
+        let randomNumber = Math.floor(Math.random() * 100) + 1;
+        let attempts = 5;
+        let score = 0;
+
+        // Update score display
+        function updateScore() {
+            document.getElementById('score').textContent = `Score: ${score}`;
+        }
+
+        // Check user guess
+        function checkGuess() {
+            const guess = parseInt(document.getElementById('guess').value);
+            const messageDiv = document.getElementById('message');
+            const attemptsDiv = document.getElementById('attempts');
+            const restartButton = document.getElementById('restartButton');
+            const heart = document.getElementById('heart');
+            const brokenHeart = document.getElementById('brokenHeart');
+            const tryAgain = document.getElementById('tryAgain');
+            if (isNaN(guess)) {
+                messageDiv.textContent = "Please enter a valid number.";
+                messageDiv.classList.remove('correct', 'high', 'low', 'game-over');
+                messageDiv.classList.add('high');
+                return;
+            }
+
+            if (guess === randomNumber) {
+                messageDiv.textContent = `Congratulations! You've guessed the number ${randomNumber}.`;
+                messageDiv.classList.remove('high', 'low', 'game-over');
+                messageDiv.classList.add('correct');
+                attemptsDiv.innerHTML = '';
+                score += 10;  // Increase score on success
+                updateScore(); // Update score on UI
+                heart.style.display = 'inline-block'; // Show 3D heart animation
+                restartButton.style.display = 'block'; // Show restart button
+            } else if (guess > randomNumber) {
+                messageDiv.textContent = "Your guess is too high.";
+                messageDiv.classList.remove('correct', 'low', 'game-over');
+                messageDiv.classList.add('high');
+            } else {
+                messageDiv.textContent = "Your guess is too low.";
+                messageDiv.classList.remove('correct', 'high', 'game-over');
+                messageDiv.classList.add('low');
+            }
+
+            attempts--;
+            attemptsDiv.innerHTML = `Remaining attempts: ${attempts}`;
+
+            if (attempts === 0) {
+                messageDiv.textContent = `Game Over! The correct number was ${randomNumber}.`;
+                messageDiv.classList.remove('high', 'low', 'correct');
+                messageDiv.classList.add('game-over');
+                attemptsDiv.innerHTML = '';
+                score -= 5;  // Decrease score on game over
+                updateScore(); // Update score on UI
+                brokenHeart.style.display = 'inline-block'; // Show broken heart animation
+                tryAgain.style.display = 'inline-block'; // Show Try Again message
+                restartButton.style.display = 'block'; // Show restart button
+                document.getElementById("btn").disabled=true;
+            }
+        }
+
+        // Restart the game
+        function restartGame() {
+    randomNumber = Math.floor(Math.random() * 100) + 1;
+    attempts = 5;
+    document.getElementById('guess').value = '';
+    document.getElementById('message').textContent = '';
+    document.getElementById('attempts').innerHTML = `Remaining attempts: ${attempts}`;
+    document.getElementById('restartButton').style.display = 'none';
+    document.getElementById('heart').style.display = 'none'; // Hide the heart animation
+    document.getElementById('brokenHeart').style.display = 'none'; // Hide the broken heart
+    document.getElementById('tryAgain').style.display = 'none'; // Hide the Try Again message
+    score = 0;  // Reset score
+    updateScore(); // Update score on UI
+    document.getElementById("btn").disabled = false; // Enable submit button
+    document.getElementById('guess').focus();
+
+}
+
+    </script>
+</body>
+</html>
